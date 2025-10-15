@@ -1,0 +1,141 @@
+# Gitignore for KMIM project
+.vscode
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Compiled eBPF objects (keep source .c files)
+ebpf/*.o
+ebpf/*.ll
+ebpf/*.bc
+*.bpf.o
+kmim.bpf.o
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# eBPF compiled objects
+*.o
+*.ll
+*.bc
+
+# Remove this section as it's now handled above
+
+# KMIM specific
+kmim_baseline*.json
+test_baseline*.json
+*.log
+kmim_report_*.json
+kmim_report_*.csv
+last_scan_results.json
+security_report.json
+kmim.service.backup.*
+
+# Test directories
+test_screenshots/
+test_*/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Documentation builds
+docs/_build/
+docs/.doctrees/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Package manager
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build artifacts
+*.deb
+*.rpm
+*.tar.gz
+*.tar.bz2
+*.zip
+
+# Security sensitive files
+secrets/
+*.pem
+*.key
+*.crt
+
+# Local configuration
+config.local.*
+local_settings.py
+
+# Backup files
+*.bak
+*.backup
+*.orig
+test_baseline.json.backup.1760546859
+.github/

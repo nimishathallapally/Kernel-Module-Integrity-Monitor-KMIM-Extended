@@ -1,0 +1,42 @@
+[Unit]
+Description=KMIM - Kernel Module Integrity Monitor
+Documentation=man:kmim(1)
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/local/bin/kmim monitor /etc/kmim/baseline.json --interval 30
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Security settings
+NoNewPrivileges=false
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/kmim /etc/kmim
+ProtectKernelTunables=false
+ProtectKernelModules=false
+ProtectControlGroups=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=false
+RestrictNamespaces=true
+
+# Environment
+Environment=PYTHONPATH=/usr/local/lib/python3/dist-packages
+WorkingDirectory=/var/log/kmim
+
+# Resource limits
+MemoryMax=256M
+CPUQuota=20%
+
+[Install]
+WantedBy=multi-user.target

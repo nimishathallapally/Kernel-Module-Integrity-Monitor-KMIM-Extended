@@ -1,0 +1,596 @@
+.TH KMIM 1 "October 2025" "KMIM v2.0" "User Commands"
+.SH NAME
+kmim \- Advanced Kernel Module Integrity Monitor and Rootkit Detection System
+.SH SYNOPSIS
+.B kmim
+.BR baseline
+.I BASELINE_FILE
+.br
+.B kmim
+.BR scan
+.I BASELINE_FILE
+.br
+.B kmim
+.BR monitor
+.I BASELINE_FILE
+.RB [ \-\-interval
+.IR SECONDS ]
+.br
+.B kmim
+.BR report
+.RB [ \-\-format
+.IR FORMAT ]
+.RB [ \-\-output
+.IR FILE ]
+.br
+.B kmim
+.BR update
+.I BASELINE_FILE
+.br
+.B kmim
+.BR simulate
+.IR ATTACK_TYPE
+.br
+.B kmim
+.BR show
+.I MODULE_NAME
+.br
+.B kmim
+.BR syscalls
+.RB [ \-\-limit
+.IR LIMIT ]
+.br
+.B kmim
+.BR logs
+.RB [ \-\-verify ]
+.RB [ \-\-count
+.IR COUNT ]
+.SH DESCRIPTION
+.B kmim
+is a production-grade security tool for comprehensive kernel module integrity monitoring and rootkit detection. It provides real-world defense against kernel rootkits and supply-chain attacks through advanced anomaly detection, continuous monitoring, and tamper-evident logging.
+.PP
+KMIM utilizes eBPF (extended Berkeley Packet Filter) technology to monitor kernel module activities in real-time, cross-references multiple kernel information sources to detect hidden modules, and maintains SHA256-chained tamper-evident logs to prevent modification of security audit trails.
+.PP
+The tool is designed for enterprise security deployments and supports automated monitoring through systemd service integration, structured reporting for compliance, and attack simulation for security testing.
+.SH COMMANDS
+.TP
+.BR baseline " " \fIBASELINE_FILE\fR
+Create a comprehensive baseline snapshot of the current trusted kernel module state and save it to the specified JSON file. The baseline captures:
+.RS
+.IP \[bu] 2
+All loaded kernel modules with metadata
+.IP \[bu]
+SHA256 hashes of on-disk .ko files
+.IP \[bu]
+Module load addresses and sizes
+.IP \[bu]
+Syscall table addresses (468+ x64 syscalls)
+.IP \[bu]
+Kernel version and system information
+.IP \[bu]
+Compiler information and ELF sections
+.RE
+This baseline serves as the trusted reference for all subsequent integrity checks.
+.TP
+.BR scan " " \fIBASELINE_FILE\fR
+Perform comprehensive integrity scan against the specified baseline. Advanced detection includes:
+.RS
+.IP \[bu] 2
+.B Hidden module detection:
+Cross-check eBPF tracepoint data vs /proc/modules
+.IP \[bu]
+.B Syscall hook detection:
+Monitor syscall table addresses for unauthorized changes
+.IP \[bu]
+.B Hash validation:
+Verify SHA256 hashes of on-disk module files
+.IP \[bu]
+.B Module tampering:
+Detect modifications to existing modules
+.IP \[bu]
+.B Unexpected events:
+Identify unusual module load/unload operations
+.RE
+Results are color-coded: Green (OK), Yellow (Suspicious), Red (Critical Alert).
+.TP
+.BR monitor " " \fIBASELINE_FILE\fR " " \fB[\-\-interval \fISECONDS\fB]\fR
+Run continuous integrity monitoring daemon. Performs periodic scans and provides real-time alerts for detected anomalies. Default scan interval is 30 seconds.
+.RS
+.IP \[bu] 2
+Runs in foreground with real-time status updates
+.IP \[bu]
+Immediate alerts for critical security events
+.IP \[bu]
+Configurable scan intervals
+.IP \[bu]
+Can be deployed as systemd service
+.IP \[bu]
+Graceful shutdown on SIGINT (Ctrl+C)
+.RE
+Example: \fBsudo kmim monitor baseline.json --interval 60\fR
+.TP
+.BR report " " \fB[\-\-format \fIFORMAT\fB] [\-\-output \fIFILE\fB]\fR
+Export scan results in structured formats for integration with security tools and compliance reporting:
+.RS
+.IP \[bu] 2
+.B JSON format:
+Machine-readable with full metadata
+.IP \[bu]
+.B CSV format:
+Spreadsheet-compatible for analysis
+.IP \[bu]
+Auto-generated filenames with timestamps
+.IP \[bu]
+Includes all anomaly details and statistics
+.RE
+Example: \fBsudo kmim report --format csv --output security_audit.csv\fR
+.TP
+.BR update " " \fIBASELINE_FILE\fR
+Update existing baseline after trusted kernel upgrades or module changes. This command:
+.RS
+.IP \[bu] 2
+Creates automatic backup of current baseline
+.IP \[bu]
+Captures new trusted system state
+.IP \[bu]
+Preserves audit trail of baseline changes
+.IP \[bu]
+Should only be used after verified system updates
+.RE
+Critical for maintaining accuracy after legitimate system changes.
+.TP
+.BR simulate " " \fIATTACK_TYPE\fR
+Simulate various attack scenarios for testing detection capabilities and security training. Available attack types:
+.RS
+.IP \[bu] 2
+.B hook:
+Simulate syscall table hooking
+.IP \[bu]
+.B hidden:
+Simulate hidden module injection
+.IP \[bu]
+.B tamper:
+Simulate module file tampering
+.RE
+All simulations generate realistic log entries and alerts for testing purposes.
+Example: \fBsudo kmim simulate hook\fR
+.TP
+.BR show " " \fIMODULE_NAME\fR
+Display comprehensive information about a specific kernel module:
+.RS
+.IP \[bu] 2
+Module size and memory address
+.IP \[bu]
+Full and truncated SHA256 hashes
+.IP \[bu]
+Compiler information (GCC version, etc.)
+.IP \[bu]
+ELF sections (.text, .data, .rodata, etc.)
+.IP \[bu]
+File path and metadata
+.RE
+Useful for detailed investigation of specific modules.
+.TP
+.BR syscalls " " \fB[\-\-limit \fILIMIT\fB]\fR
+Display syscall table addresses for integrity monitoring:
+.RS
+.IP \[bu] 2
+Lists x64 syscall names and addresses
+.IP \[bu]
+Shows total syscall count
+.IP \[bu]
+Configurable output limit (default: 20)
+.IP \[bu]
+Both simple and table formatted views
+.RE
+Essential for detecting syscall table manipulation by rootkits.
+.TP
+.BR logs " " \fB[\-\-verify] [\-\-count \fICOUNT\fB]\fR
+Display and verify tamper-evident log entries:
+.RS
+.IP \[bu] 2
+.B --verify:
+Verify SHA256 chain integrity of entire log
+.IP \[bu]
+.B --count:
+Number of recent entries to display (default: 50)
+.IP \[bu]
+Color-coded log levels (INFO, WARNING, CRITICAL)
+.IP \[bu]
+Full audit trail of all KMIM operations
+.RE
+Ensures log integrity and provides forensic audit capabilities.
+.SH OPTIONS
+.TP
+.BR \-\-interval " " \fISECONDS\fR
+Set monitoring interval for continuous monitoring mode (default: 30 seconds).
+.TP
+.BR \-\-format " " \fIFORMAT\fR
+Specify report output format: 'json' or 'csv' (default: json).
+.TP
+.BR \-\-output " " \fIFILE\fR
+Specify output file for reports (default: auto-generated with timestamp).
+.TP
+.BR \-\-limit " " \fILIMIT\fR
+Limit number of syscalls displayed (default: 20).
+.TP
+.BR \-\-verify
+Verify tamper-evident log integrity.
+.TP
+.BR \-\-count " " \fICOUNT\fR
+Number of recent log entries to display (default: 50).
+.SH FILES
+.TP
+.I /etc/kmim/baseline.json
+Default system baseline file for production deployments.
+.TP
+.I /var/log/kmim/kmim.log
+Tamper-evident log file with SHA256 chain integrity.
+.TP
+.I /etc/systemd/system/kmim.service
+Systemd service file for automated monitoring.
+.TP
+.I kmim_baseline.json
+Default baseline filename for user-created baselines.
+.SH EXIT STATUS
+.TP
+.B 0
+Successful operation, no anomalies detected.
+.TP
+.B 1
+General error (permission denied, file not found, etc.).
+.TP
+.B 2
+Security anomalies detected during scan.
+.TP
+.B 3
+Critical security alert (hidden modules, syscall hooks).
+.SH EXAMPLES
+.SS Basic Usage
+Create initial baseline:
+.RS
+.B sudo kmim baseline trusted_baseline.json
+.RE
+.PP
+Perform integrity scan:
+.RS
+.B sudo kmim scan trusted_baseline.json
+.RE
+.PP
+Start continuous monitoring:
+.RS
+.B sudo kmim monitor trusted_baseline.json --interval 30
+.RE
+.SS Advanced Operations
+Export security report:
+.RS
+.B sudo kmim report --format json --output audit_report.json
+.RE
+.PP
+Update baseline after kernel upgrade:
+.RS
+.B sudo kmim update /etc/kmim/baseline.json
+.RE
+.PP
+Test detection capabilities:
+.RS
+.B sudo kmim simulate hidden
+.RE
+.PP
+Verify log integrity:
+.RS
+.B sudo kmim logs --verify
+.RE
+.SS Production Deployment
+Deploy as systemd service:
+.RS
+.nf
+sudo cp kmim.service /etc/systemd/system/
+sudo mkdir -p /etc/kmim /var/log/kmim
+sudo kmim baseline /etc/kmim/baseline.json
+sudo systemctl enable kmim.service
+sudo systemctl start kmim.service
+.fi
+.RE
+.SH SECURITY CONSIDERATIONS
+.PP
+KMIM requires root privileges to access kernel information and eBPF subsystem. This is necessary for:
+.IP \[bu] 2
+Loading eBPF programs for module monitoring
+.IP \[bu]
+Accessing /proc/modules and /proc/kallsyms
+.IP \[bu]
+Reading kernel module files for hash verification
+.IP \[bu]
+Monitoring kernel tracepoint events
+.PP
+Always verify KMIM integrity before deployment:
+.IP \[bu] 2
+Verify package signatures and checksums
+.IP \[bu]
+Use trusted installation sources
+.IP \[bu]
+Regularly update to latest security patches
+.IP \[bu]
+Monitor KMIM's own integrity
+.SH DETECTION CAPABILITIES
+KMIM can detect various rootkit and attack techniques:
+.TP
+.B Hidden Modules
+Modules loaded but not visible in /proc/modules through cross-referencing with eBPF tracepoint data.
+.TP
+.B Syscall Hooks
+Unauthorized modifications to syscall table addresses, commonly used by rootkits.
+.TP
+.B Module Tampering
+Changes to on-disk module files detected through SHA256 hash verification.
+.TP
+.B Supply Chain Attacks
+Detection of unauthorized modules or modifications during system updates.
+.TP
+.B DKOM Attacks
+Direct Kernel Object Manipulation attempts that modify kernel structures.
+.SH PERFORMANCE
+Typical performance characteristics:
+.IP \[bu] 2
+Baseline creation: 2-3 seconds for 100+ modules
+.IP \[bu]
+Integrity scan: 1-2 seconds
+.IP \[bu]
+Memory usage: 25-50MB during operation
+.IP \[bu]
+CPU impact: <5% during monitoring
+.SH TROUBLESHOOTING
+.TP
+.B Permission denied errors
+Ensure running with root privileges: \fBsudo kmim ...\fR
+.TP
+.B eBPF loading failed
+Verify kernel eBPF support and libbpf installation:
+.RS
+.nf
+sudo dmesg | grep -i bpf
+sudo apt-get install libbpf-dev
+.fi
+.RE
+.TP
+.B Module path not found
+Update module dependency database:
+.RS
+.B sudo depmod -a
+.RE
+.TP
+.B Debug mode
+Enable verbose logging:
+.RS
+.B export KMIM_DEBUG=1
+.RE
+.SH BUGS
+Report bugs at: https://github.com/yourusername/kmim/issues
+.SH AUTHOR
+Written by Software Security Lab (HPRCSE Group).
+.SH COPYRIGHT
+Copyright \(co 2025 HPRCSE Group. License MIT.
+.SH SEE ALSO
+.BR systemd (1),
+.BR bpf (2),
+.BR proc (5)
+Full path to the module file
+.RE
+.SH OPTIONS
+.TP
+.BR \-h ", " \-\-help
+Show help message and exit.
+.TP
+.BR \-\-limit " " \fILIMIT\fR
+(syscalls command only) Limit the number of syscalls displayed. Default is 20.
+.SH COLOR OUTPUT
+KMIM features a rich, color-coded output system:
+.TP
+.B Green
+Success messages, OK status, info notifications
+.TP
+.B Yellow
+Warnings, syscall names, memory addresses
+.TP
+.B Red
+Errors, modified modules, critical issues
+.TP
+.B Blue
+Metadata, counts, summaries
+.TP
+.B Cyan
+Property labels, headers
+.TP
+.B Magenta
+Hash values
+.SH FILES
+.TP
+.I kmim_baseline.json
+Default baseline file created by the baseline command.
+.TP
+.I /proc/modules
+Source of current kernel module information
+.TP
+.I /proc/kallsyms
+Source of kernel symbol and syscall addresses
+.TP
+.I /lib/modules/
+Directory containing kernel module files
+.SH EXIT STATUS
+.TP
+.B 0
+Success
+.TP
+.B 1
+Various errors
+.SH EXAMPLES
+.TP
+Create a baseline:
+.B sudo kmim baseline kmim_baseline.json
+.TP
+Scan against baseline:
+.B sudo kmim scan kmim_baseline.json
+.TP
+Show module details:
+.B sudo kmim show nvidia
+.TP
+Display syscall addresses:
+.B sudo kmim syscalls --limit 10
+.SH ENHANCED OUTPUT EXAMPLES
+.SS Baseline Creation
+.nf
+$ sudo kmim baseline kmim_baseline.json
+[OK] Captured baseline of 127 modules, 468 syscall addresses
+Saved to kmim_baseline.json
+Baseline created successfully
+Modules captured: 127
+Syscalls captured: 468
+.fi
+.SS Scan Results
+.nf
+$ sudo kmim scan kmim_baseline.json
+[INFO] All modules match baseline
+[INFO] No hidden modules
+Summary: 127 OK, 0 Suspicious
+
+        Scan Results         
+┏━━━━━━━━┳━━━━━━━━┳━━━━━━━━━┓
+┃ Module ┃ Status ┃ Details ┃
+┡━━━━━━━━╇━━━━━━━━╇━━━━━━━━━┩
+│ nvidia │ OK     │         │
+└────────┴────────┴─────────┘
+.fi
+.SS Module Information
+.nf
+$ sudo kmim show nvidia
+Module: nvidia
+Size: 54308864
+Addr: 0xffffffffc0000000
+Hash: sha256:70c827b...
+Compiler: GCC 12.2
+ELF Sections: .text, .data, .rodata
+
+         Module: nvidia          
+┏━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
+┃ Property    ┃ Value             ┃
+┡━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
+│ Size        │ 54308864          │
+│ Compiler    │ GCC 12.2          │
+└─────────────┴───────────────────┘
+.fi
+.SS Syscall Addresses
+.nf
+$ sudo kmim syscalls --limit 5
+Syscall Addresses (468 total):
+__x64_sys_read: ffffffffa940c3e0
+__x64_sys_write: ffffffffa945a8e0
+... and 463 more
+
+    Syscall Addresses (first 5)     
+┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓
+┃ Syscall Name   ┃ Address          ┃
+┡━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩
+│ __x64_sys_read │ ffffffffa940c3e0 │
+└────────────────┴──────────────────┘
+.fi
+.SH SECURITY
+KMIM operates in read-only mode and does not write to kernel memory. All eBPF programs are verified by the kernel's verifier. Root privileges are required for eBPF operations.
+.SH AUTHOR
+Software Security Lab (HPRCSE Group)
+.SH OUTPUT FORMAT
+.SS Baseline File Format
+The baseline JSON file contains:
+.PP
+.nf
+{
+    "timestamp": "ISO-8601 timestamp",
+    "modules": {
+        "module_name": {
+            "size": size_in_bytes,
+            "addr": "hex_load_address",
+            "hash": "sha256_hash",
+            "path": "full_path_to_module"
+        }
+    }
+}
+.fi
+.PP
+.SS Scan Output
+The scan command produces a table showing:
+.IP \[bu] 2
+Module name
+.IP \[bu]
+Status (OK or type of issue)
+.IP \[bu]
+Details about any detected changes
+.PP
+.SS Show Output
+The show command displays a table with:
+.IP \[bu] 2
+Size in bytes
+.IP \[bu]
+Load address in hexadecimal
+.IP \[bu]
+SHA256 hash of the module file
+.IP \[bu]
+Full path to the module file
+.SH EXAMPLES
+.PP
+Create a baseline:
+.PP
+.nf
+    $ sudo kmim baseline kmim_baseline.json
+    Found 127 kernel modules
+    Baseline saved to kmim_baseline.json
+.fi
+.PP
+Scan against baseline:
+.PP
+.nf
+    $ sudo kmim scan kmim_baseline.json
+    Scan Results
+    Module     Status     Details
+    ext4       OK
+    nvidia     MODIFIED   Hash mismatch
+.fi
+.PP
+Show module details:
+.PP
+.nf
+    $ sudo kmim show nvidia
+    Module: nvidia
+    Size: 54308864
+    Address: 0xffffffffc0000000
+    Hash: 70c827b7b46eceebd8c087ab926d698c6b
+    Path: /lib/modules/...
+.fi
+.SH SECURITY CONSIDERATIONS
+.IP \[bu] 2
+The tool requires root privileges to access kernel module information
+.IP \[bu]
+Baseline files should be stored securely and protected from unauthorized modification
+.IP \[bu]
+Regular scans should be performed to detect potential tampering
+.IP \[bu]
+Changes in module hashes may indicate compromise but could also result from legitimate updates
+.SH FILES
+.TP
+.I /proc/modules
+Source of current kernel module information
+.TP
+.I /lib/modules/
+Directory containing kernel module files
+.TP
+.I kmim_baseline.json
+Default name for baseline files
+.SH BUGS
+Report bugs to: https://github.com/nimishathallapally/kmim/issues
+.SH COPYRIGHT
+Copyright \(co 2025 Nimisha Thallapally. License MIT.)
+.SH SEE ALSO
+.BR bpf (2),
+.BR lsmod (8),
+.BR modinfo (8),
+.BR insmod (8),
+.BR rmmod (8)
