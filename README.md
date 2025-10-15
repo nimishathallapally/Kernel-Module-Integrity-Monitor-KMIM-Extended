@@ -346,25 +346,6 @@ cd kmim
 pip3 install -r requirements-dev.txt
 pre-commit install
 ```
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Linux kernel eBPF subsystem
-- BCC (BPF Compiler Collection) project
-- Rich library for beautiful CLI interfaces
-- HPRCSE Group, Software Security Lab
-
-## 📞 Support
-
-- **Documentation**: `man kmim`
-- **Issues**: [GitHub Issues](https://github.com/yourusername/kmim/issues)
-- **Security**: See [SECURITY.md](SECURITY.md) for security policy
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/kmim/discussions)
-
 ---
 
 **⚠️ Security Notice**: KMIM requires root privileges to access kernel information. Always verify the integrity of KMIM itself before deployment in production environments.
